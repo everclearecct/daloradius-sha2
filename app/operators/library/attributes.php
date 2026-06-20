@@ -69,25 +69,25 @@ function hashPasswordAttribute($attribute, $value)
 
         case "SHA2-Password":
             return hash(
-                "sha-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
+                "sha{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
                 $value,
             );
         case "SSHA2-224-Password":
             $rand_salt = bin2hex(random_bytes(16));
-            $salted_hash = hash("sha-224", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            $salted_hash = hash("sha224", "{$value}{$rand_salt}");
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA2-256-Password":
             $rand_salt = bin2hex(random_bytes(16));
-            $salted_hash = hash("sha-256", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            $salted_hash = hash("sha256", "{$value}{$rand_salt}");
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA2-384-Password":
             $rand_salt = bin2hex(random_bytes(16));
-            $salted_hash = hash("sha-384", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            $salted_hash = hash("sha384", "{$value}{$rand_salt}");
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA2-512-Password":
             $rand_salt = bin2hex(random_bytes(16));
-            $salted_hash = hash("sha-512", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            $salted_hash = hash("sha512", "{$value}{$rand_salt}");
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SHA3-Password":
             return hash(
                 "sha3-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
@@ -96,19 +96,19 @@ function hashPasswordAttribute($attribute, $value)
         case "SSHA3-224-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-224", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA3-256-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-256", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA3-384-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-384", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            return base64_encode("{$salted_hash}{$rand_salt}");
         case "SSHA3-512-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-512", "{$value}{$rand_salt}");
-            return base64_encode($salted_hash);
+            return base64_encode("{$salted_hash}{$rand_salt}");
 
         default:
         // TODO

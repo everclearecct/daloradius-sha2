@@ -68,47 +68,57 @@ function hashPasswordAttribute($attribute, $value)
             );
 
         case "SHA2-Password":
-            return hash(
+            $hash = hash(
                 "sha{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
                 $value,
             );
-        case "SSHA2-224-Password":
+            return "{sha{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}}{$hash}";
+        case "SSHA-224-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha224", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
-        case "SSHA2-256-Password":
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha224}{$b64coded}";
+        case "SSHA-256-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha256", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
-        case "SSHA2-384-Password":
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha256}{$b64coded}";
+        case "SSHA-384-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha384", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
-        case "SSHA2-512-Password":
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha384}{$b64coded}";
+        case "SSHA-512-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha512", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha512}{$b64coded}";
         case "SHA3-Password":
-            return hash(
-                "sha3-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
+            $hash = hash(
+                "sha{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
                 $value,
             );
+            return "{sha3-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}}{$hash}";
         case "SSHA3-224-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-224", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha3-224}{$b64coded}";
         case "SSHA3-256-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-256", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha3-256}{$b64coded}";
         case "SSHA3-384-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-384", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha3-384}{$b64coded}";
         case "SSHA3-512-Password":
             $rand_salt = bin2hex(random_bytes(16));
             $salted_hash = hash("sha3-512", "{$value}{$rand_salt}");
-            return base64_encode("{$salted_hash}{$rand_salt}");
+            $b64coded = base64_encode("{$salted_hash}{$rand_salt}");
+            return "{ssha3-512}{$b64coded}";
 
         default:
         // TODO
@@ -305,6 +315,14 @@ function handleAttributes(
 
             // here we can safely prepare the hashed value
             $value = hashPasswordAttribute($attribute, $value);
+
+            if (
+                strpos($attribute, "SHA2") === 0 ||
+                strpos($attribute, "SSHA") === 0 ||
+                strpos($attribute, "SHA3") === 0
+            ) {
+                $attribute = "Password-With-Header";
+            }
         }
 
         // before we continue we check if this attribute already exists

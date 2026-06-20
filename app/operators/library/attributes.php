@@ -21,37 +21,40 @@
  */
 
 // prevent this file to be directly accessed
-if (strpos($_SERVER['PHP_SELF'], '/library/attributes.php') !== false) {
+if (strpos($_SERVER["PHP_SELF"], "/library/attributes.php") !== false) {
     header("Location: ../index.php");
-    exit;
+    exit();
 }
 
-function is_group($user_or_group) {
-    return strtolower(trim($user_or_group)) === 'group';
+function is_group($user_or_group)
+{
+    return strtolower(trim($user_or_group)) === "group";
 }
 
-function is_passwordlike_attribute($attribute) {
+function is_passwordlike_attribute($attribute)
+{
     return preg_match("/-Password$/", $attribute) === 1;
 }
 
 /**
  * Hashes the password attribute if applicable.
  *
- * If the attribute indicates a password (ends with "-Password"), 
+ * If the attribute indicates a password (ends with "-Password"),
  * this function hashes the provided value according to the hashing method.
  *
  * @param string $attribute The attribute to hash.
  * @param string $value The value to hash.
  * @return string|bool The hashed version of the value, or false if not applicable.
  */
-function hashPasswordAttribute($attribute, $value) {
+function hashPasswordAttribute($attribute, $value)
+{
     if (!is_passwordlike_attribute($attribute)) {
         return false;
     }
-
+    global $configValues;
     switch ($attribute) {
         case "Crypt-Password":
-            return crypt($value, 'SALT_DALORADIUS');
+            return crypt($value, "SALT_DALORADIUS");
 
         case "MD5-Password":
             return strtoupper(md5($value));
@@ -60,7 +63,52 @@ function hashPasswordAttribute($attribute, $value) {
             return sha1($value);
 
         case "NT-Password":
-            return strtoupper(bin2hex(mhash(MHASH_MD4, iconv('UTF-8', 'UTF-16LE', $value))));
+            return strtoupper(
+                bin2hex(mhash(MHASH_MD4, iconv("UTF-8", "UTF-16LE", $value))),
+            );
+
+        case "SHA2-Password":
+            return hash(
+                "sha-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
+                $value,
+            );
+        case "SSHA2-224-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha-224", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA2-256-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha-256", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA2-384-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha-384", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA2-512-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha-512", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SHA3-Password":
+            return hash(
+                "sha3-{$configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"]}",
+                $value,
+            );
+        case "SSHA3-224-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha3-224", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA3-256-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha3-256", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA3-384-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha3-384", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
+        case "SSHA3-512-Password":
+            $rand_salt = bin2hex(random_bytes(16));
+            $salted_hash = hash("sha3-512", "{$value}{$rand_salt}");
+            return base64_encode($salted_hash);
 
         default:
         // TODO
@@ -83,13 +131,27 @@ function hashPasswordAttribute($attribute, $value) {
  * @param string $value The value to match in the database table.
  * @return bool True if the attribute is already present, otherwise false.
  */
-function is_attribute_already_present($dbSocket, $table, $param, $subject, $attribute, $op, $value) {
+function is_attribute_already_present(
+    $dbSocket,
+    $table,
+    $param,
+    $subject,
+    $attribute,
+    $op,
+    $value,
+) {
     global $logDebugSQL;
 
     // Construct the SQL query
-    $sql = sprintf("SELECT COUNT(`id`) FROM `%s` WHERE `%s`='%s' AND `attribute`='%s' AND `op`='%s' AND `value`='%s'",
-                    $table, $param, $dbSocket->escapeSimple($subject), $dbSocket->escapeSimple($attribute),
-                    $dbSocket->escapeSimple($op), $dbSocket->escapeSimple($value));
+    $sql = sprintf(
+        "SELECT COUNT(`id`) FROM `%s` WHERE `%s`='%s' AND `attribute`='%s' AND `op`='%s' AND `value`='%s'",
+        $table,
+        $param,
+        $dbSocket->escapeSimple($subject),
+        $dbSocket->escapeSimple($attribute),
+        $dbSocket->escapeSimple($op),
+        $dbSocket->escapeSimple($value),
+    );
 
     // Execute the query
     $res = $dbSocket->query($sql);
@@ -108,18 +170,23 @@ function is_attribute_already_present($dbSocket, $table, $param, $subject, $attr
  * @param string $table The name of the database table.
  * @return string The name of the appropriate database table.
  */
-function get_table_name($user_or_group, $table) {
+function get_table_name($user_or_group, $table)
+{
     global $configValues;
 
-    $is_reply_table = mb_strpos(strtolower(trim($table)), 'reply') !== false;
+    $is_reply_table = mb_strpos(strtolower(trim($table)), "reply") !== false;
 
     // Determine the appropriate table based on the user or group parameter
     if (is_group($user_or_group)) {
         // If 'group' is provided, use group-specific tables
-        $key = ($is_reply_table) ? 'CONFIG_DB_TBL_RADGROUPREPLY' : 'CONFIG_DB_TBL_RADGROUPCHECK';
+        $key = $is_reply_table
+            ? "CONFIG_DB_TBL_RADGROUPREPLY"
+            : "CONFIG_DB_TBL_RADGROUPCHECK";
     } else {
         // If 'user' or any other value is provided, use user-specific tables
-        $key = ($is_reply_table) ? 'CONFIG_DB_TBL_RADREPLY' : 'CONFIG_DB_TBL_RADCHECK';
+        $key = $is_reply_table
+            ? "CONFIG_DB_TBL_RADREPLY"
+            : "CONFIG_DB_TBL_RADCHECK";
     }
 
     return $configValues[$key];
@@ -134,14 +201,19 @@ function get_table_name($user_or_group, $table) {
 
 //
 // returns an array of prepared attributes
-function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $user_or_group='user') {
+function handleAttributes(
+    $dbSocket,
+    $subject,
+    $skipList,
+    $insert_only = true,
+    $user_or_group = "user",
+) {
     global $configValues, $valid_ops, $logDebugSQL;
 
-    $param = (is_group($user_or_group)) ? 'groupname' : 'username';
+    $param = is_group($user_or_group) ? "groupname" : "username";
     $counter = 0;
 
     foreach ($_POST as $element => $field) {
-
         // we skip several attributes (contained in the $skipList array)
         // which we do not wish to process (ie: do any sql related stuff in the db)
         if (in_array($element, $skipList)) {
@@ -160,11 +232,10 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
         }
 
         // we assign all the elements
-        list($id__attribute, $value, $op, $table) = $field;
+        [$id__attribute, $value, $op, $table] = $field;
 
         if (preg_match("/__/", $id__attribute) === 1) {
-
-            list($columnId, $attribute) = explode("__", $id__attribute);
+            [$columnId, $attribute] = explode("__", $id__attribute);
 
             $attribute = trim($attribute);
 
@@ -174,18 +245,17 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
             if ($insert_only || $columnId < 0) {
                 $columnId = 0;
             }
-
         } else {
-            $columnId = 0;      // we need to set a non-existent column id so that the attribute would
-                                // not match in the database (as it is added from the Attributes tab)
-                                // and the if/else check will result in an INSERT instead of an UPDATE for the
-                                // the last attribute
+            $columnId = 0; // we need to set a non-existent column id so that the attribute would
+            // not match in the database (as it is added from the Attributes tab)
+            // and the if/else check will result in an INSERT instead of an UPDATE for the
+            // the last attribute
             $attribute = $id__attribute;
         }
 
         // value and attribute are required
         if (empty($value) || empty($attribute)) {
-                continue;
+            continue;
         }
 
         // we only accept valid ops
@@ -203,13 +273,16 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
             // before we proceed we need to understand if the password should be updated or skipped
 
             if (!$insert_only) {
-
                 // if we find the exact same password attribute, we skip password-update
-                $sql = sprintf("SELECT `value`, `op` FROM `%s` WHERE `id`=%s", $table, $columnId);
+                $sql = sprintf(
+                    "SELECT `value`, `op` FROM `%s` WHERE `id`=%s",
+                    $table,
+                    $columnId,
+                );
                 $res = $dbSocket->query($sql);
                 $logDebugSQL .= "$sql;\n";
 
-                list($old_value, $old_op) = $res->fetchrow();
+                [$old_value, $old_op] = $res->fetchrow();
 
                 // If the new value matches the old value, check if the operator has changed.
                 // If so, update the operator and continue iterating.
@@ -217,24 +290,34 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
                 if ($old_value === $value) {
                     if ($old_op !== $op) {
                         // Update the operator in the database
-                        $sql = sprintf("UPDATE `%s` SET `op`='%s' WHERE `id`=%s", $table,
-                                       $dbSocket->escapeSimple($op), $dbSocket->escapeSimple($columnId));
+                        $sql = sprintf(
+                            "UPDATE `%s` SET `op`='%s' WHERE `id`=%s",
+                            $table,
+                            $dbSocket->escapeSimple($op),
+                            $dbSocket->escapeSimple($columnId),
+                        );
                         $res = $dbSocket->query($sql);
                         $logDebugSQL .= "$sql;\n";
                     }
                     continue;
                 }
-
             }
 
             // here we can safely prepare the hashed value
             $value = hashPasswordAttribute($attribute, $value);
-
         }
 
         // before we continue we check if this attribute already exists
         // so we can insert/update only if the exact same attribute is not already present in the db
-        $already_present = is_attribute_already_present($dbSocket, $table, $param, $subject, $attribute, $op, $value);
+        $already_present = is_attribute_already_present(
+            $dbSocket,
+            $table,
+            $param,
+            $subject,
+            $attribute,
+            $op,
+            $value,
+        );
 
         if ($already_present) {
             continue;
@@ -244,17 +327,28 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
         // if $columnId is 0 we have to insert, otherwise we have to update
         if ($columnId == 0) {
             // insert
-            $sql = sprintf("INSERT INTO `%s` (`id`, `%s`, `attribute`, `op`, `value`) VALUES (0, '%s', '%s', '%s', '%s')",
-                           $table, $param, $dbSocket->escapeSimple($subject), $dbSocket->escapeSimple($attribute),
-                           $dbSocket->escapeSimple($op), $dbSocket->escapeSimple($value));
+            $sql = sprintf(
+                "INSERT INTO `%s` (`id`, `%s`, `attribute`, `op`, `value`) VALUES (0, '%s', '%s', '%s', '%s')",
+                $table,
+                $param,
+                $dbSocket->escapeSimple($subject),
+                $dbSocket->escapeSimple($attribute),
+                $dbSocket->escapeSimple($op),
+                $dbSocket->escapeSimple($value),
+            );
         } else {
             // update
-            $sql = sprintf("UPDATE `%s` SET `value`='%s', `op`='%s' WHERE `%s`='%s' AND `attribute`='%s' AND `id`=%s",
-                           $table, $dbSocket->escapeSimple($value), $dbSocket->escapeSimple($op),
-                           $param, $dbSocket->escapeSimple($subject), $dbSocket->escapeSimple($attribute),
-                           $dbSocket->escapeSimple($columnId));
+            $sql = sprintf(
+                "UPDATE `%s` SET `value`='%s', `op`='%s' WHERE `%s`='%s' AND `attribute`='%s' AND `id`=%s",
+                $table,
+                $dbSocket->escapeSimple($value),
+                $dbSocket->escapeSimple($op),
+                $param,
+                $dbSocket->escapeSimple($subject),
+                $dbSocket->escapeSimple($attribute),
+                $dbSocket->escapeSimple($columnId),
+            );
         }
-
 
         $res = $dbSocket->query($sql);
         $logDebugSQL .= "$sql;\n";
@@ -262,7 +356,6 @@ function handleAttributes($dbSocket, $subject, $skipList, $insert_only=true, $us
         if (!DB::isError($res)) {
             $counter++;
         }
-
     } // end foreach
 
     return $counter;

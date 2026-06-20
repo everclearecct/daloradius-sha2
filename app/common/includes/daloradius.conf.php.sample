@@ -114,8 +114,7 @@ $configValues['CONFIG_USER_TRAFFIC_MONITOR_ENABLED'] = 'no';
 $configValues['CONFIG_USER_TRAFFIC_MONITOR_HARDLIMIT'] = '1073741824';
 $configValues['CONFIG_USER_TRAFFIC_MONITOR_SOFTLIMIT'] = '536870912';
 $configValues['CONFIG_USER_VPN_SERVER'] = 'vpn.company.com';
-
-
+$configValues['CONFIG_HASH_SHA_DIGEST_LENGTH'] = '256';
 
 // invoice templates - optional
 $configValues['CONFIG_INVOICE_TEMPLATE'] = 'invoice_template.html';

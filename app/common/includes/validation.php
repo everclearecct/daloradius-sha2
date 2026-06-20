@@ -26,26 +26,41 @@
  */
 
 // prevent this file to be directly accessed
-if (strpos($_SERVER['PHP_SELF'], '/common/includes/validation.php') !== false) {
+if (strpos($_SERVER["PHP_SELF"], "/common/includes/validation.php") !== false) {
     http_response_code(404);
-    exit;
+    exit();
 }
 
 // commonly used regexes collection
 define("DATE_REGEX", '/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/');
 define("ORDER_TYPE_REGEX", '/^(de|a)sc$/');
-define("HOSTNAME_REGEX", '/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/');
-define("IP_REGEX", '/^(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9]).){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])$/');
+define(
+    "HOSTNAME_REGEX",
+    '/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/',
+);
+define(
+    "IP_REGEX",
+    '/^(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9]).){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])$/',
+);
 define("NETMASK_LENGTH_REGEX", '/^3[0-2]|[1-2][0-9]|[1-9]$/');
-define("MACADDR_REGEX", '/^[0-9A-Fa-f]{12}|(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/');
+define(
+    "MACADDR_REGEX",
+    '/^[0-9A-Fa-f]{12}|(?:[0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\1){4}[0-9A-Fa-f]{2}$/',
+);
 define("PINCODE_REGEX", '/^[a-zA-Z0-9]+$/');
 
 // this regex allows input like (e.g.) 127, 127., 127.0, 127.0., 127.0.0, 127.0.0 and 127.0.0.1
-define("LOOSE_IP_REGEX", '/^(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.?){1,4}$/');
+define(
+    "LOOSE_IP_REGEX",
+    '/^(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.?){1,4}$/',
+);
 
 define("FIRST_LAST_NAME_REGEX", '/^[ \-\p{L}0-9]+$/u');
 define("SAFE_PASSWORD_REGEX", '/^\P{C}+$/u');
-define("EMAIL_LIKE_USERNAME_REGEX", '/^[A-Za-z0-9][A-Za-z0-9_.-]*(?:@[A-Za-z0-9.-]+\.[A-Za-z]{2,})?$/');
+define(
+    "EMAIL_LIKE_USERNAME_REGEX",
+    '/^[A-Za-z0-9][A-Za-z0-9_.-]*(?:@[A-Za-z0-9.-]+\.[A-Za-z]{2,})?$/',
+);
 define("LOG_FILEPATH_REGEX", '/^(\/[a-zA-Z0-9]+)+(\.log)?$/');
 
 define("DB_TABLE_NAME_REGEX", '/^[a-zA-Z0-9_]+$/');
@@ -61,304 +76,371 @@ define("RECIPIENT_NAME_REGEX", '/^[a-zA-Z0-9 -]+$/');
 // this lists can be also used for presentation purpose.
 // whitelists naming convention:
 // $valid_ [param_name] s
-$valid_radiusReplys = array( "Any", "Access-Accept", "Access-Reject" );
+$valid_radiusReplys = ["Any", "Access-Accept", "Access-Reject"];
 
+$valid_backupActions = [
+    "download" => t("all", "Download"),
+    "rollback" => t("all", "Rollback"),
+    "delete" => t("all", "del"),
+];
 
-$valid_backupActions = array( "download" => t('all','Download'), "rollback" => t('all','Rollback'), "delete" => t('all','del'));
+$valid_authTypes = [
+    "userAuth" => "Based on username and password",
+    "macAuth" => "Based on MAC address",
+    "pincodeAuth" => "Based on PIN code",
+];
 
-$valid_authTypes = array(
-                            "userAuth" => "Based on username and password",
-                            "macAuth" => "Based on MAC address",
-                            "pincodeAuth" => "Based on PIN code"
-                        );
-
-$valid_passwordTypes = array(
-                                "Cleartext-Password",
-                                "NT-Password",
-                                "MD5-Password",
-                                "SHA1-Password",
-                                "User-Password",
-                                "Crypt-Password",
-                                //~ "CHAP-Password"
-                             );
+$valid_passwordTypes = [
+    "Cleartext-Password",
+    "NT-Password",
+    "MD5-Password",
+    "SHA1-Password",
+    "User-Password",
+    "Crypt-Password",
+    "SHA2-Password",
+    "SSHA2-224-Password",
+    "SSHA2-256-Password",
+    "SSHA2-384-Password",
+    "SSHA2-512-Password",
+    "SHA3-Password",
+    "SSHA3-224-Password",
+    "SSHA3-256-Password",
+    "SSHA3-384-Password",
+    "SSHA3-512-Password",
+    //~ "CHAP-Password"
+];
 
 // https://wiki.freeradius.org/config/Operators
 $valid_ops = [
-                ":=", // Always matches as a check item and replaces or adds attribute in the configuration items
-                "=" , // Not allowed as a check item for RADIUS protocol attributes. It is allowed for server configuration attributes (Auth-Type, etc), and sets the value of on attribute, only if there is no other item of the same attribute.
-                "+=", // Always matches as a check item and adds the attribute with value to the configuration items
-                "==", // As a check item, it matches if the named attribute is present in the request and has the given value
-                "!=", // As a check item, matches if the given attribute is in the request and does not have the given value
-                ">" , // As a check item, it matches if the request contains an attribute with a value greater than the given value
-                ">=", // As a check item, it matches if the request contains an attribute with a value greater than or equal to the given value
-                "<" , // As a check item, it matches if the request contains an attribute with a value less than the given value
-                "<=", // As a check item, it matches if the request contains an attribute with a value less than or equal to the given value
-                "=~", // As a check item, it matches if the request contains an attribute which matches the given regular expression. This operator may only be applied to string attributes.
-                "!~", // As a check item, it matches if the request contains an attribute which does not match the given regular expression.
-                "=*", // As a check item, it matches if the request contains the named attribute, no matter what the value is.
-                "!*", // As a check item, it matches if the request does not contain the named attribute, no matter what the value is.
-              ];
+    ":=", // Always matches as a check item and replaces or adds attribute in the configuration items
+    "=", // Not allowed as a check item for RADIUS protocol attributes. It is allowed for server configuration attributes (Auth-Type, etc), and sets the value of on attribute, only if there is no other item of the same attribute.
+    "+=", // Always matches as a check item and adds the attribute with value to the configuration items
+    "==", // As a check item, it matches if the named attribute is present in the request and has the given value
+    "!=", // As a check item, matches if the given attribute is in the request and does not have the given value
+    ">", // As a check item, it matches if the request contains an attribute with a value greater than the given value
+    ">=", // As a check item, it matches if the request contains an attribute with a value greater than or equal to the given value
+    "<", // As a check item, it matches if the request contains an attribute with a value less than the given value
+    "<=", // As a check item, it matches if the request contains an attribute with a value less than or equal to the given value
+    "=~", // As a check item, it matches if the request contains an attribute which matches the given regular expression. This operator may only be applied to string attributes.
+    "!~", // As a check item, it matches if the request contains an attribute which does not match the given regular expression.
+    "=*", // As a check item, it matches if the request contains the named attribute, no matter what the value is.
+    "!*", // As a check item, it matches if the request does not contain the named attribute, no matter what the value is.
+];
 
+$valid_recommendedHelpers = [
+    "date",
+    "datetime",
+    "authtype",
+    "framedprotocol",
+    "servicetype",
+    "kbitspersecond",
+    "bitspersecond",
+    "volumebytes",
+    "mikrotikRateLimit",
+];
 
-$valid_recommendedHelpers = array(
-                                    "date", "datetime", "authtype", "framedprotocol", "servicetype",
-                                    "kbitspersecond", "bitspersecond", "volumebytes", "mikrotikRateLimit",
-                                 );
+$valid_attributeTypes = [
+    "string",
+    "integer",
+    "ipaddr",
+    "date",
+    "octets",
+    "ipv6addr",
+    "ifid",
+    "abinary",
+];
 
-$valid_attributeTypes = array(
-                                "string",
-                                "integer",
-                                "ipaddr",
-                                "date",
-                                "octets",
-                                "ipv6addr",
-                                "ifid",
-                                "abinary",
-                             );
-
-$valid_db_engines = array(
-                            "mysql" => "MySQL",
-                            "pgsql" => "PostgreSQL",
-                            "odbc" => "ODBC",
-                            "mssql" => "MsSQL",
-                            "mysqli" => "MySQLi",
-                            "msql" => "MsQL",
-                            "sybase" => "Sybase",
-                            "sqlite" => "Sqlite",
-                            "oci8" => "Oci8",
-                            "ibase" => "ibase",
-                            "fbsql" => "fbsql",
-                            "informix" => "informix"
-                         );
+$valid_db_engines = [
+    "mysql" => "MySQL",
+    "pgsql" => "PostgreSQL",
+    "odbc" => "ODBC",
+    "mssql" => "MsSQL",
+    "mysqli" => "MySQLi",
+    "msql" => "MsQL",
+    "sybase" => "Sybase",
+    "sqlite" => "Sqlite",
+    "oci8" => "Oci8",
+    "ibase" => "ibase",
+    "fbsql" => "fbsql",
+    "informix" => "informix",
+];
 
 // values taken from an instance of freeradius 3.0.21
-$valid_nastypes = array(
-                         "livingston", "cisco", "cvx", "juniper", "multitech", "computone", "max40xx",
-                         "ascend", "portslave", "tc", "pathras", "pr3000", "pr4000", "patton", "digitro",
-                         "usrhiper", "netserver", "versanet", "bay", "cisco_l2tp", "mikrotik", "mikrotik_snmp",
-                         "redback", "dot1x", "other"
-                       );
+$valid_nastypes = [
+    "livingston",
+    "cisco",
+    "cvx",
+    "juniper",
+    "multitech",
+    "computone",
+    "max40xx",
+    "ascend",
+    "portslave",
+    "tc",
+    "pathras",
+    "pr3000",
+    "pr4000",
+    "patton",
+    "digitro",
+    "usrhiper",
+    "netserver",
+    "versanet",
+    "bay",
+    "cisco_l2tp",
+    "mikrotik",
+    "mikrotik_snmp",
+    "redback",
+    "dot1x",
+    "other",
+];
 
 // accounting custom-query options list
-$acct_custom_query_options_all = array(
-                                        "radacctid",
-                                        "acctsessionid",
-                                        "acctuniqueid",
-                                        "username",
-                                        "realm",
-                                        "nasipaddress",
-                                        "nasportid",
-                                        "nasporttype",
-                                        "acctstarttime",
-                                        "acctupdatetime",
-                                        "acctstoptime",
-                                        "acctinterval",
-                                        "acctsessiontime",
-                                        "acctauthentic",
-                                        "connectinfo_start",
-                                        "connectinfo_stop",
-                                        "acctinputoctets",
-                                        "acctoutputoctets",
-                                        "calledstationid",
-                                        "callingstationid",
-                                        "acctterminatecause",
-                                        "servicetype",
-                                        "framedprotocol",
-                                        "framedipaddress",
-                                        "framedipv6address",
-                                        "framedipv6prefix",
-                                        "framedinterfaceid",
-                                        "delegatedipv6prefix",
-                                      );
+$acct_custom_query_options_all = [
+    "radacctid",
+    "acctsessionid",
+    "acctuniqueid",
+    "username",
+    "realm",
+    "nasipaddress",
+    "nasportid",
+    "nasporttype",
+    "acctstarttime",
+    "acctupdatetime",
+    "acctstoptime",
+    "acctinterval",
+    "acctsessiontime",
+    "acctauthentic",
+    "connectinfo_start",
+    "connectinfo_stop",
+    "acctinputoctets",
+    "acctoutputoctets",
+    "calledstationid",
+    "callingstationid",
+    "acctterminatecause",
+    "servicetype",
+    "framedprotocol",
+    "framedipaddress",
+    "framedipv6address",
+    "framedipv6prefix",
+    "framedinterfaceid",
+    "delegatedipv6prefix",
+];
 
 // accounting custom-query options selected by default
-$acct_custom_query_options_default = array(
-                                            "username", "nasipaddress", "acctstarttime", "acctstoptime",
-                                            "acctsessiontime", "acctinputoctets", "acctoutputoctets", "calledstationid",
-                                            "callingstationid", "acctterminatecause", "framedipaddress"
-                                          );
+$acct_custom_query_options_default = [
+    "username",
+    "nasipaddress",
+    "acctstarttime",
+    "acctstoptime",
+    "acctsessiontime",
+    "acctinputoctets",
+    "acctoutputoctets",
+    "calledstationid",
+    "callingstationid",
+    "acctterminatecause",
+    "framedipaddress",
+];
 
 // billing history query options list
-$bill_history_query_options_all = array(
-                                            "id" => t('all','ID'),
-                                            "username" => t('all','Username'),
-                                            "planId" => t('all','PlanId'),
+$bill_history_query_options_all = [
+    "id" => t("all", "ID"),
+    "username" => t("all", "Username"),
+    "planId" => t("all", "PlanId"),
 
-                                            "billAmount" => t('all','BillAmount'),
-                                            "billAction" => t('all','BillAction'),
-                                            "billPerformer" => t('all','BillPerformer'),
-                                            "billReason" => t('all','BillReason'),
+    "billAmount" => t("all", "BillAmount"),
+    "billAction" => t("all", "BillAction"),
+    "billPerformer" => t("all", "BillPerformer"),
+    "billReason" => t("all", "BillReason"),
 
-                                            "paymentmethod" => t('ContactInfo','PaymentMethod'),
-                                            "cash" => t('ContactInfo','Cash'),
+    "paymentmethod" => t("ContactInfo", "PaymentMethod"),
+    "cash" => t("ContactInfo", "Cash"),
 
-                                            "creditcardname" => t('ContactInfo','CreditCardName'),
-                                            "creditcardnumber" => t('ContactInfo','CreditCardNumber'),
-                                            "creditcardverification" => t('ContactInfo','CreditCardVerificationNumber'),
-                                            "creditcardtype" => t('ContactInfo','CreditCardType'),
-                                            "creditcardexp" => t('ContactInfo','CreditCardExpiration'),
-                                            "coupon" => t('all','Coupon'),
-                                            "discount" => t('all','Discount'),
-                                            "notes" => t('ContactInfo','Notes'),
-                                            "creationdate" => t('all','CreationDate'),
-                                            "creationby" => t('all','CreationBy'),
-                                            "updatedate" => t('all','UpdateDate'),
-                                            "updateby" => t('all','UpdateBy')
-                                       );
+    "creditcardname" => t("ContactInfo", "CreditCardName"),
+    "creditcardnumber" => t("ContactInfo", "CreditCardNumber"),
+    "creditcardverification" => t(
+        "ContactInfo",
+        "CreditCardVerificationNumber",
+    ),
+    "creditcardtype" => t("ContactInfo", "CreditCardType"),
+    "creditcardexp" => t("ContactInfo", "CreditCardExpiration"),
+    "coupon" => t("all", "Coupon"),
+    "discount" => t("all", "Discount"),
+    "notes" => t("ContactInfo", "Notes"),
+    "creationdate" => t("all", "CreationDate"),
+    "creationby" => t("all", "CreationBy"),
+    "updatedate" => t("all", "UpdateDate"),
+    "updateby" => t("all", "UpdateBy"),
+];
 
 // billing history query options selected by default
-$bill_history_query_options_default = array(
-                                                "username",
-                                                "planId",
-                                                "billAmount",
-                                                "billAction",
-                                                "billPerformer",
-                                                "paymentmethod"
-                                           );
+$bill_history_query_options_default = [
+    "username",
+    "planId",
+    "billAmount",
+    "billAction",
+    "billPerformer",
+    "paymentmethod",
+];
 
-$bill_merchant_transactions_options_all = array(
-                                                    "id" => t('all','ID'),
-                                                    "username" => t('all','Username'),
-                                                    "password"  => t('all','Password'),
-                                                    "txnId"  => t('all','TxnId'),
-                                                    "planName" => t('all','PlanName'),
-                                                    "planId"  => t('all','PlanId'),
-                                                    "quantity"  => t('all','Quantity'),
-                                                    "business_email"  => t('all','ReceiverEmail'),
-                                                    "business_id"  => t('all','Business'),
-                                                    "payment_tax" => t('all','Tax'),
-                                                    "payment_cost"  => t('all','Cost'),
-                                                    "payment_fee" => t('all','TransactionFee'),
-                                                    "payment_total" => t('all','TotalCost'),
-                                                    "payment_currency" => t('all','PaymentCurrency'),
-                                                    "first_name" => t('all','FirstName'),
-                                                    "last_name" => t('all','LastName'),
-                                                    "payer_email" => t('all','PayerEmail'),
-                                                    "payer_address_name"  => t('all','AddressRecipient'),
-                                                    "payer_address_street"  => t('all','Street'),
-                                                    "payer_address_country" => t('all','Country'),
-                                                    "payer_address_country_code"  => t('all','CountryCode'),
-                                                    "payer_address_city" => t('all','City'),
-                                                    "payer_address_state" => t('all','State'),
-                                                    "payer_address_zip"  => t('all','Zip'),
-                                                    "payment_date" => t('all','PaymentDate'),
-                                                    "payment_status" => t('all','PaymentStatus'),
-                                                    "payer_status" => t('all','PayerStatus'),
-                                                    "payment_address_status" => t('all','PaymentAddressStatus'),
-                                                    "vendor_type" => t('all','VendorType')
-                                               );
+$bill_merchant_transactions_options_all = [
+    "id" => t("all", "ID"),
+    "username" => t("all", "Username"),
+    "password" => t("all", "Password"),
+    "txnId" => t("all", "TxnId"),
+    "planName" => t("all", "PlanName"),
+    "planId" => t("all", "PlanId"),
+    "quantity" => t("all", "Quantity"),
+    "business_email" => t("all", "ReceiverEmail"),
+    "business_id" => t("all", "Business"),
+    "payment_tax" => t("all", "Tax"),
+    "payment_cost" => t("all", "Cost"),
+    "payment_fee" => t("all", "TransactionFee"),
+    "payment_total" => t("all", "TotalCost"),
+    "payment_currency" => t("all", "PaymentCurrency"),
+    "first_name" => t("all", "FirstName"),
+    "last_name" => t("all", "LastName"),
+    "payer_email" => t("all", "PayerEmail"),
+    "payer_address_name" => t("all", "AddressRecipient"),
+    "payer_address_street" => t("all", "Street"),
+    "payer_address_country" => t("all", "Country"),
+    "payer_address_country_code" => t("all", "CountryCode"),
+    "payer_address_city" => t("all", "City"),
+    "payer_address_state" => t("all", "State"),
+    "payer_address_zip" => t("all", "Zip"),
+    "payment_date" => t("all", "PaymentDate"),
+    "payment_status" => t("all", "PaymentStatus"),
+    "payer_status" => t("all", "PayerStatus"),
+    "payment_address_status" => t("all", "PaymentAddressStatus"),
+    "vendor_type" => t("all", "VendorType"),
+];
 
-$bill_merchant_transactions_options_default = array(
-                                                        "username",
-                                                        "planName",
-                                                        "payment_fee",
-                                                        "payment_total",
-                                                        "payment_currency",
-                                                        "first_name",
-                                                        "last_name",
-                                                        "payer_email",
-                                                        "payer_address_country",
-                                                        "payer_address_city",
-                                                        "payer_address_state",
-                                                        "payment_date",
-                                                        "payment_status",
-                                                        "vendor_type"
-                                                   );
+$bill_merchant_transactions_options_default = [
+    "username",
+    "planName",
+    "payment_fee",
+    "payment_total",
+    "payment_currency",
+    "first_name",
+    "last_name",
+    "payer_email",
+    "payer_address_country",
+    "payer_address_city",
+    "payer_address_state",
+    "payment_date",
+    "payment_status",
+    "vendor_type",
+];
 
 // validating values
 
-$valid_paymentStatus = array(
-                              "Any", "Completed",  "Denied",  "Expired",  "Failed",  "In-Progress",  "Pending",
-                              "Processed",  "Refunded",  "Reversed",  "Canceled-Reversal",  "Voided",
-                            );
-$valid_vendorTypes = array( "Any", "2Checkout", "PayPal" );
-$valid_billactions = array( "Any", "Refill Session Time", "Refill Session Traffic" );
+$valid_paymentStatus = [
+    "Any",
+    "Completed",
+    "Denied",
+    "Expired",
+    "Failed",
+    "In-Progress",
+    "Pending",
+    "Processed",
+    "Refunded",
+    "Reversed",
+    "Canceled-Reversal",
+    "Voided",
+];
+$valid_vendorTypes = ["Any", "2Checkout", "PayPal"];
+$valid_billactions = ["Any", "Refill Session Time", "Refill Session Traffic"];
 
-$valid_planTypes = array( "Prepaid", "Postpaid", "2Checkout", "PayPal", );
-$valid_planRecurringPeriods = array( "Never", "Daily", "Weekly", "Monthly", "Quarterly", "Semi-Yearly", "Yearly", );
-$valid_planRecurringBillingSchedules = array( "Fixed", "Anniversary", );
+$valid_planTypes = ["Prepaid", "Postpaid", "2Checkout", "PayPal"];
+$valid_planRecurringPeriods = [
+    "Never",
+    "Daily",
+    "Weekly",
+    "Monthly",
+    "Quarterly",
+    "Semi-Yearly",
+    "Yearly",
+];
+$valid_planRecurringBillingSchedules = ["Fixed", "Anniversary"];
 $valid_planCurrencys = [
-                        "USD", // United States Dollar
-                        "EUR", // Euro
-                        "JPY", // Japanese Yen
-                        "GBP", // British Pound Sterling
-                        "CAD", // Canadian Dollar
-                        "AUD", // Australian Dollar
-                        "CHF", // Swiss Franc
-                        "CNY", // Chinese Yuan
-                        "HKD", // Hong Kong Dollar
-                        "NZD", // New Zealand Dollar
-                        "SEK", // Swedish Krona
-                        "KRW", // South Korean Won
-                        "SGD", // Singapore Dollar
-                        "NOK", // Norwegian Krone
-                        "MXN", // Mexican Peso
-                        "INR", // Indian Rupee
-                        "RUB", // Russian Ruble
-                        "ZAR", // South African Rand
-                        "TRY", // Turkish Lira
-                        "BRL", // Brazilian Real
-                        "TWD", // New Taiwan Dollar
-                        "DKK", // Danish Krone
-                        "PLN", // Polish Zloty
-                        "THB", // Thai Baht
-                        "IDR", // Indonesian Rupiah
-                        "HUF", // Hungarian Forint
-                        "CZK", // Czech Koruna
-                        "ILS", // Israeli New Shekel
-                        "PHP", // Philippine Peso
-                        "ARS", // Argentine Peso
-                        "CLP", // Chilean Peso
-                        "COP", // Colombian Peso
-                        "MYR", // Malaysian Ringgit
-                        "KES", // Kenyan Shilling
-                        "UAH", // Ukrainian Hryvnia
-                        "NGN", // Nigerian Naira
-                        "EGP", // Egyptian Pound
-                        "PKR", // Pakistani Rupee
-                        "VND", // Vietnamese Dong
-                        "BDT", // Bangladeshi Taka
-                        "IQD", // Iraqi Dinar
-                        "IRR", // Iranian Rial
-                        "QAR", // Qatari Riyal
-                        "KWD", // Kuwaiti Dinar
-                        "OMR", // Omani Rial
-                        "BHD", // Bahraini Dinar
-                        "LYD", // Libyan Dinar
-                        "AED", // United Arab Emirates Dirham
-                        "SAR", // Saudi Riyal
-                        "JOD", // Jordanian Dinar
-                        "LBP", // Lebanese Pound
-                      ];
+    "USD", // United States Dollar
+    "EUR", // Euro
+    "JPY", // Japanese Yen
+    "GBP", // British Pound Sterling
+    "CAD", // Canadian Dollar
+    "AUD", // Australian Dollar
+    "CHF", // Swiss Franc
+    "CNY", // Chinese Yuan
+    "HKD", // Hong Kong Dollar
+    "NZD", // New Zealand Dollar
+    "SEK", // Swedish Krona
+    "KRW", // South Korean Won
+    "SGD", // Singapore Dollar
+    "NOK", // Norwegian Krone
+    "MXN", // Mexican Peso
+    "INR", // Indian Rupee
+    "RUB", // Russian Ruble
+    "ZAR", // South African Rand
+    "TRY", // Turkish Lira
+    "BRL", // Brazilian Real
+    "TWD", // New Taiwan Dollar
+    "DKK", // Danish Krone
+    "PLN", // Polish Zloty
+    "THB", // Thai Baht
+    "IDR", // Indonesian Rupiah
+    "HUF", // Hungarian Forint
+    "CZK", // Czech Koruna
+    "ILS", // Israeli New Shekel
+    "PHP", // Philippine Peso
+    "ARS", // Argentine Peso
+    "CLP", // Chilean Peso
+    "COP", // Colombian Peso
+    "MYR", // Malaysian Ringgit
+    "KES", // Kenyan Shilling
+    "UAH", // Ukrainian Hryvnia
+    "NGN", // Nigerian Naira
+    "EGP", // Egyptian Pound
+    "PKR", // Pakistani Rupee
+    "VND", // Vietnamese Dong
+    "BDT", // Bangladeshi Taka
+    "IQD", // Iraqi Dinar
+    "IRR", // Iranian Rial
+    "QAR", // Qatari Riyal
+    "KWD", // Kuwaiti Dinar
+    "OMR", // Omani Rial
+    "BHD", // Bahraini Dinar
+    "LYD", // Libyan Dinar
+    "AED", // United Arab Emirates Dirham
+    "SAR", // Saudi Riyal
+    "JOD", // Jordanian Dinar
+    "LBP", // Lebanese Pound
+];
 
-$valid_planTimeTypes = array( "Accumulative", "Time-To-Finish" );
+$valid_planTimeTypes = ["Accumulative", "Time-To-Finish"];
 
-$valid_timeUnits = array( "second", "minute", "hour", "day", "week", "month", );
+$valid_timeUnits = ["second", "minute", "hour", "day", "week", "month"];
 
 // ordered by country code
-$operators_valid_languages = array(
-                                    "ar" => "Arabic",
-                                    "de" => "German",
-                                    "en" => "English",
-                                    "es_ve" => "Spanish - Venezuelan",
-                                    "hu" => "Hungarian",
-                                    "it" => "Italian",
-                                    "ja" => "Japanese",
-                                    "pt_br" => "Portuguese - Brazilian",
-                                    "ro" => "Romanian",
-                                    "ru" => "Russian",
-                                    "tr" => "Turkish",
-                                    "zh" => "Chinese",
-                                  );
+$operators_valid_languages = [
+    "ar" => "Arabic",
+    "de" => "German",
+    "en" => "English",
+    "es_ve" => "Spanish - Venezuelan",
+    "hu" => "Hungarian",
+    "it" => "Italian",
+    "ja" => "Japanese",
+    "pt_br" => "Portuguese - Brazilian",
+    "ro" => "Romanian",
+    "ru" => "Russian",
+    "tr" => "Turkish",
+    "zh" => "Chinese",
+];
 // users allowed languages
-$users_valid_languages = array(
-                                    "de" => "Deutsch (German)",
-                                    "en" => "English",
-                                    "it" => "Italiano (Italian)",
-                                    "ro" => "Română (Romanian)",
-                                    "ru" => "Русский (Russian)",
-                                  );
+$users_valid_languages = [
+    "de" => "Deutsch (German)",
+    "en" => "English",
+    "it" => "Italiano (Italian)",
+    "ro" => "Română (Romanian)",
+    "ru" => "Русский (Russian)",
+];
 
-$valid_message_types = array(
-                                 "login", "support", "dashboard",
-                              );
+$valid_message_types = ["login", "support", "dashboard"];

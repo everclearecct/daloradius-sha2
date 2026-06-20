@@ -102,12 +102,6 @@ $valid_passwordTypes = [
     "SSHA-256-Password",
     "SSHA-384-Password",
     "SSHA-512-Password",
-    "SHA3-Password",
-    "SSHA3-224-Password",
-    "SSHA3-256-Password",
-    "SSHA3-384-Password",
-    "SSHA3-512-Password",
-    "Password-With-Header",
     //~ "CHAP-Password"
 ];
 

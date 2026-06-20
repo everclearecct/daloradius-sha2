@@ -818,11 +818,6 @@ function populate_password_types(
             <option value='SSHA-256-Password'>SSHA-256-Password</option>
             <option value='SSHA-384-Password'>SSHA-384-Password</option>
             <option value='SSHA-512-Password'>SSHA-512-Password</option>
-            <option value='SHA3-Password'>SHA3-Password</option>
-            <option value='SSHA3-224-Password'>SSHA3-224-Password</option>
-            <option value='SSHA3-256-Password'>SSHA3-256-Password</option>
-            <option value='SSHA3-384-Password'>SSHA3-384-Password</option>
-            <option value='SSHA3-512-Password'>SSHA3-512-Password</option>
             </select>";
 }
 

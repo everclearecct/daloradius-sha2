@@ -165,6 +165,14 @@ $input_descriptors0[] = [
 ];
 
 $input_descriptors0[] = [
+    "type" => "select",
+    "options" => ["224", "256", "384", "512"],
+    "caption" => "Unsalted SHA2/3 Digest Length",
+    "name" => "CONFIG_HASH_SHA_DIGEST_LENGTH",
+    "selected_value" => $configValues["CONFIG_HASH_SHA_DIGEST_LENGTH"],
+];
+
+$input_descriptors0[] = [
     "type" => "text",
     "caption" => t("all", "RandomChars"),
     "name" => "CONFIG_USER_ALLOWEDRANDOMCHARS",
